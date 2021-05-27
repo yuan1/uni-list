@@ -1,0 +1,1 @@
+json-server ./data.json --routes ./routes.json
