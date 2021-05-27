@@ -40,6 +40,7 @@
 			}
 		},
 		onBackPress(e) {
+			// 从列表页面返回其他页面时清除local
 			if (e.from == "backbutton") {
 				uni.removeStorage({
 					key: "subjectsTop"
@@ -89,7 +90,7 @@
 				})
 				window.location.href = "/pages/detail/detail?id=" + id;
 			},
-			showIndex(){
+			showIndex() {
 				uni.navigateTo({
 					url: '/pages/index/index'
 				});
