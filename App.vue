@@ -1,7 +1,12 @@
 <script>
+	import {
+		wxRegister,
+		hideAllMenuItems
+	} from "@/common/api/weixin";
 	export default {
 		onLaunch: function() {
 			console.log('App Launch')
+			wxRegister(hideAllMenuItems, window.location.href.split("#")[0])
 		},
 		onShow: function() {
 			console.log('App Show')

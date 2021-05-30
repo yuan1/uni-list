@@ -1,16 +1,26 @@
 <template>
 	<view class="content">
 		<u-button class="u-m-20" @click="showIndex">回首页</u-button>
+		<text @click="title=title+'1'"> {{title}}</text>
 		<u-cell-group>
 			<u-cell-item v-for="(d,index) in listData.data" icon="photo-fill" :arrow="false" :key="index"
-				:title="d.title" :value="d.episodes_info" @click="showDetail(d.id)"></u-cell-item>
+				:title="d.title" :value="d.episodes_info" @click="showDetailModal(d.id)"></u-cell-item>
 		</u-cell-group>
 		<u-loadmore :status="listData.status" />
+		<u-popup v-model="showDetail" mode="center" width="100%" height="100%" :zoom="false" duration="0">
+			<view @click="closeDetail">
+				<Detail ref="detail"></Detail>
+			</view>
+		</u-popup>
 	</view>
 </template>
 
 <script>
+	import Detail from "../detail/detail"
 	export default {
+		components: {
+			Detail
+		},
 		data() {
 			return {
 				listData: {
@@ -18,39 +28,14 @@
 					page: 1,
 					size: 20,
 					data: [],
-				}
+				},
+				title: "huahua",
+				showDetail: false
 			}
 		},
 		onLoad() {
-			const listData = uni.getStorageSync('subjectsData');
-			if (listData) {
-				this.listData = listData;
-			} else {
-				this.loadList();
-			}
-			// 如果存储了 滚动条位置 则进行滚动
-			const scrollTop = uni.getStorageSync('subjectsTop');
-			if (scrollTop) {
-				this.$nextTick(() => {
-					uni.pageScrollTo({
-						scrollTop: scrollTop, //距离页面顶部的距离
-						duration: 0
-					});
-				})
-			}
-		},
-		onBackPress(e) {
-			// 从列表页面返回其他页面时清除local
-			if (e.from == "backbutton") {
-				uni.removeStorage({
-					key: "subjectsTop"
-				})
-				uni.removeStorage({
-					key: "subjectsData"
-				})
-				uni.navigateBack();
-				return true;
-			}
+			this.loadList();
+			this.fobiddenBack()
 		},
 		onPullDownRefresh() {
 			this.listData.page = 1;
@@ -61,13 +46,27 @@
 			this.listData.page++;
 			this.loadList();
 		},
-		onPageScroll(e) {
-			uni.setStorage({
-				key: "subjectsTop",
-				data: e.scrollTop
-			})
+		onUnload() {
+			this.enableBack();
 		},
 		methods: {
+			//禁用浏览器返回
+			fobiddenBack() {
+				//防止页面后退
+				window.history.pushState(null, null, document.URL);
+				window.addEventListener('popstate', this.backCommon)
+			},
+			//启用浏览器返回
+			enableBack() {
+				window.history.go(-1);
+				window.removeEventListener('popstate', this.backCommon)
+			},
+			backCommon() {
+				if (this.showDetail) {
+					this.showDetail = false;
+					window.history.pushState(null, null, document.URL);
+				}
+			},
 			loadList() {
 				this.listData.status = 'loading';
 				this.$u.get('/api/subjects', {
@@ -83,12 +82,17 @@
 					uni.stopPullDownRefresh();
 				})
 			},
-			showDetail(id) {
-				uni.setStorage({
-					key: "subjectsData",
-					data: this.listData
+			showDetailModal(id) {
+				this.showDetail = true;
+				this.$nextTick(() => {
+					this.$refs.detail.id = id;
+					this.$refs.detail.loadData(id);
+					this.$refs.detail.back = this.closeDetail;
 				})
-				window.location.href = "/pages/detail/detail?id=" + id;
+			},
+			closeDetail() {
+				this.$refs.detail.close();
+				this.showDetail = false
 			},
 			showIndex() {
 				uni.navigateTo({
