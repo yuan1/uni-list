@@ -35,7 +35,6 @@
 		},
 		onLoad() {
 			this.loadList();
-			this.fobiddenBack()
 		},
 		onPullDownRefresh() {
 			this.listData.page = 1;
@@ -45,9 +44,6 @@
 		onReachBottom() {
 			this.listData.page++;
 			this.loadList();
-		},
-		onUnload() {
-			this.enableBack();
 		},
 		methods: {
 			//禁用浏览器返回
@@ -63,8 +59,8 @@
 			},
 			backCommon() {
 				if (this.showDetail) {
-					this.showDetail = false;
 					window.history.pushState(null, null, document.URL);
+					this.closeDetail();
 				}
 			},
 			loadList() {
@@ -84,6 +80,7 @@
 			},
 			showDetailModal(id) {
 				this.showDetail = true;
+				this.fobiddenBack()
 				this.$nextTick(() => {
 					this.$refs.detail.id = id;
 					this.$refs.detail.loadData(id);
@@ -93,6 +90,7 @@
 			closeDetail() {
 				this.$refs.detail.close();
 				this.showDetail = false
+				this.enableBack();
 			},
 			showIndex() {
 				uni.navigateTo({
